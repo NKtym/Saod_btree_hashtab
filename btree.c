@@ -1,14 +1,12 @@
 #include <stdlib.h>
-#include <stdlib.h>
+#include <string.h>
 #include "btree.h"
-
-#define HASH_SIZE 128
 
 unsigned int hash(char *key)
 {
-    unsigned int h = 0;
+    unsigned int h = 0, hash_mul = 31;
     while (*key)
-        h += (unsigned int)*key++;
+        h = h * hash_mul + (unsigned int)*key++;
     return h % 200000;
 }
 
@@ -64,49 +62,81 @@ struct bstree *bstree_lookup(struct bstree *tree, char* key)
 
 struct bstree *bstree_min(struct bstree *tree)
 {
-    if(tree==NULL)
+    if(!tree)
 	return NULL;
-    while(tree->left!=NULL)
+    while(tree->left)
 	tree=tree->left;
     return tree;
 }
 
 struct bstree *bstree_max(struct bstree *tree)
 {
-    if(tree==NULL)
+    if(!tree)
 	return NULL;
-    while(tree->right!=NULL)
+    while(tree->right)
 	tree=tree->right;
     return tree;
 }
 
-//struct bstree *bstree_delete(struct bstree *tree,char* key)
-//{
- //   if(tree==NULL)
-//	return NULL;
-  //  struct bstree *temp;
-    //if(key<tree->key)
-	//tree->left=bstree_delete(tree->left,key);
-    //else if(key>tree->key)
-//	tree->right=bstree_delete(tree->right,key);
-  //  else{
-	//if(tree->left==NULL && tree->right==NULL){
-	  //  free(tree);
-	    //return NULL;
-//	}
-//	else if(tree->left==NULL && tree->right!=NULL){
-//	    tree=tree->right;
-//	}
-//	else if(tree->right==NULL && tree->left!=NULL){
-//	    tree=tree->left;
-//	}
-//	else if(tree->right!=NULL && tree->left!=NULL){
-//	    temp=tree->right;
-//	    while(temp->left!=NULL)
-//		temp=temp->left;
-//	    tree=temp;
-//	    free(temp);
-//	}
-//    }
-//    return tree;
-//}
+struct bstree *bstree_delete(struct bstree *tree,char* key){
+  struct bstree *parent = NULL;
+  struct bstree *node = tree;
+
+  // Find the node to be deleted and its parent
+  while (node) {
+    if (strcmp(key, node->key) == 0) {
+      break;
+    } else if (strcmp(key, node->key) < 0) {
+      parent = node;
+      node = node->left;
+    } else {
+      parent = node;
+      node = node->right;
+    }
+  }
+
+  // If the node was not found, return the original tree
+  if (!node) {
+    return tree;
+  }
+
+  // If the node has no children, just remove it
+  if (!node->left && !node->right) {
+    if (!parent) {
+      // The node is the root of the tree
+      free(node);
+      return NULL;
+    } else if (parent->left == node) {
+      parent->left = NULL;
+    } else {
+      parent->right = NULL;
+    }
+    free(node);
+  }
+  // If the node has one child, replace it with its child
+  else if (!node->left || !node->right) {
+    struct bstree *child = node->left ? node->left : node->right;
+    if (!parent) {
+      // The node is the root of the tree
+      free(node);
+      return child;
+    } else if (parent->left == node) {
+      parent->left = child;
+    } else {
+      parent->right = child;
+    }
+    free(node);
+  }
+  // If the node has two children, replace it with the minimum node in its
+  // right subtree
+  else {
+    struct bstree *successor = bstree_min(node->right);
+    node->key = successor->key;
+    node->value = successor->value;
+    tree->right = bstree_delete(tree->right, successor->key);
+  }
+
+  return tree;
+}
+
+
