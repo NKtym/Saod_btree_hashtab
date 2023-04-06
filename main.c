@@ -55,7 +55,7 @@ int main(){
     h = JenkinsHash("A");
     printf("%d\n",h);
     //test
-    FILE* file;
+    FILE* file,*f;
     file=fopen("a.txt","r");
     int n=200000;
     char words[n][20];
@@ -64,6 +64,13 @@ int main(){
     for(int i=0;i<=10;i++)
 	printf("%s\n",words[i]);
     fclose(file);
+    f=fopen("b.txt","r");
+    char wordsword[n][20];
+    for(int i=0;i<n;i++)
+	fgets(wordsword[i],n-1,f);
+    for(int i=0;i<=10;i++)
+	printf("%s\n",wordsword[i]);
+    fclose(f);
     //exp1
     printf("\nEXP 1\n");
     tree = bstree_create(words[0],0);
@@ -95,13 +102,13 @@ int main(){
     //exp1
     //exp5
     printf("\nEXP 5\n");
-    struct bstree *tree2 = bstree_create(words[0],0);
+    tree = bstree_create(words[0],0);
     for(int i = 2;i<=n;i++){
-	bstree_add(tree2,words[i-1],i-1);
+	bstree_add(tree,words[i-1],i-1);
 	if(i%10000 == 0){
 	    double t = 0.0;
 	    clock_t begin=clock();
-    	    node=bstree_max(tree2);
+    	    node=bstree_max(tree);
             clock_t end=clock();
 	    t+=(double)(end-begin)/ CLOCKS_PER_SEC;
 	    printf("n = %d; time = %.10lf \n", i, t);
@@ -111,12 +118,14 @@ int main(){
     //exp5
     //exp6
     printf("\nEXP 6\n");
+    int colizeon = 0;
     hashtab_init(hashtab2);
     hashtab_init(hashtab3);
     for(int i = 1;i<=n;i++){
 	hashtab_add(hashtab2,words[i],i-1,"KRhash");
 	hashtab_add(hashtab3,words[i],i-1,"Jenkinshash");
 	if(i%10000 == 0){
+	    colizeon=0;
 	    char* w = words[getRand(0, i-1)];
 	    double t = 0.0;
 	    clock_t begin=clock();
@@ -124,10 +133,22 @@ int main(){
 	    clock_t end=clock();
 	    t+=(double)(end-begin)/ CLOCKS_PER_SEC;
 	    printf("KRHASH n = %d; time = %.10lf \n", i, t);
+	    for (int j = 0; j < i; j++)
+            {
+                if (hashtab2[j] != NULL)
+                    colizeon++;
+            }
+	    printf("KRHash colizeon = %d\n", i - colizeon);
 	    double c = wtime();
 	    node2 = hashtab_lookup(hashtab3,w,"Jenkinshash");
 	    t = wtime() - c;
 	    printf("JENCKINS n = %d; time = %.10lf \n", i, t);
+	    for (int j = 0; j < i; j++)
+            {
+                if (hashtab3[j] != NULL)
+                    colizeon++;
+            }
+	    printf("Jenckins colizeon = %d\n", i - colizeon);
 	}
     }
     //epx6

@@ -7,4 +7,4 @@ MINCHARS=4
 # сортируем слова | удаляем повторяющиеся слова
 #
 cat $INFILE | tr -s '[[:punct:][:space:]]' '\n' | grep -E ".{$MINCHARS}" | \
-    sed 's/[[:upper:]]*/\L&/' | sort | uniq >a.txt
+    sed 's/[[:upper:]]*/\L&/' | uniq >b.txt
